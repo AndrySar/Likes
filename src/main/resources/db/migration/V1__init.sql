@@ -1,6 +1,6 @@
 CREATE TABLE like_table (
   id SERIAL,
-  playerId INTEGER,
+  playerId varchar(20),
   likes INTEGER,
   PRIMARY KEY(id, playerId)
 );

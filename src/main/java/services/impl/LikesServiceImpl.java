@@ -17,26 +17,25 @@ public class LikesServiceImpl implements LikesService {
     @Override
     public void like(String playerId) {
         try (Connection connection = dataSource.getConnection()) {
-            String query = new StringBuilder("INSERT INTO ")
-                    .append("like ")
-                    .append("(playerId, likes) VALUES(?, ?) ")
-                    .append("ON DUPLICATE KEY UPDATE likes = likes + 1 ")
-                    .append("WHERE playerId = ?;").toString();
+//            String query = new StringBuilder("INSERT INTO ")
+//                    .append("like ")
+//                    .append("(playerId, likes) VALUES(?, ?) ")
+//                    .append("ON DUPLICATE KEY UPDATE likes = likes + 1 ")
+//                    .append("WHERE playerId = ?;").toString();
 
             String query = new StringBuilder()
-            .append("UPDATE table SET playerId=, field2='Z' WHERE id=3;")
-                    .append("INSERT INTO table (id, field, field2) ")
-            INSERT INTO table (id, field, field2)
-            SELECT 3, 'C', 'Z'
-            WHERE NOT EXISTS (SELECT 1 FROM table WHERE id=3);
+                    .append("UPDATE like_table SET likes = likes + 1 WHERE playerid=?;")
+                    .append("INSERT INTO like_table (playerid, likes) SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM like_table WHERE playerid = ? );")
+                    .toString();
+
             try (PreparedStatement ps = connection.prepareStatement(query)) {
                 ps.setString(1, playerId);
-                ps.setInt(2, 0);
-                ps.setString(3, playerId);
+                ps.setString(2, playerId);
+                ps.setInt(3, 1);
+                ps.setString(4, playerId);
 
-                try (ResultSet resultSet = ps.executeQuery()) {
-                    resultSet.next();
-                }
+                ps.execute();
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -49,13 +48,13 @@ public class LikesServiceImpl implements LikesService {
     @Override
     public long getLikes(String playerId) {
         try (Connection connection = dataSource.getConnection()) {
-            String query = new StringBuilder("SELECT * FROM like WHERE like.playerId = ?;").toString();
+            String query = new StringBuilder("SELECT * FROM like_table WHERE like_table.playerid = ?;").toString();
             try (PreparedStatement ps = connection.prepareStatement(query)) {
                 ps.setString(1, playerId);
 
                 try (ResultSet resultSet = ps.executeQuery()) {
                     if(resultSet.next()) {
-                        return resultSet.getLong("playerId");
+                        return resultSet.getLong("likes");
                     }
                 }
             } catch (SQLException e) {
@@ -65,6 +64,6 @@ public class LikesServiceImpl implements LikesService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return Long.valueOf(-1);
+        return Long.valueOf(0);
     }
 }
