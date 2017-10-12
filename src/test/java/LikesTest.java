@@ -50,14 +50,12 @@ public class LikesTest {
         }
     }
 
-    @Ignore
     @Test
     public void simpleTest() throws SQLException {
         likesService.like("1");
         assertEquals(likesService.getLikes("1"), 1);
     }
 
-    @Ignore
     @Test
     public void doubleTest() throws SQLException {
         likesService.like("2");
@@ -65,7 +63,6 @@ public class LikesTest {
         assertEquals(likesService.getLikes("2"), 2);
     }
 
-    @Ignore
     @Test
     public void zeroTest() throws SQLException {
         assertEquals(likesService.getLikes("1"), 0);
