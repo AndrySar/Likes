@@ -1,8 +1,10 @@
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.runner.RunWith;
+import services.DBService;
+import services.DataService;
 import services.LikesService;
 import services.impl.DBServiceImpl;
+import services.impl.DataServiceImpl;
 import services.impl.LikesServiceImpl;
 
 import javax.sql.DataSource;
@@ -11,6 +13,7 @@ import java.lang.annotation.Repeatable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -22,21 +25,39 @@ import static org.junit.Assert.*;
 /**
  * Created by moiseev on 09.10.17.
  */
+
+@RunWith(RepeatingTestRunner.class)
 public class LikesTest {
 
-    private LikesService likesService;
+    private static LikesService likesService;
+    private static DataService dataService;
+    private final static List<String> players = Arrays.asList("1", "2", "3", "4", "5", "6");
 
-    @Before
-    public void setup() throws SQLException {
-        likesService = new LikesServiceImpl();
+    @BeforeClass
+    public static void setup() throws SQLException {
+        DBService dbService = new DBServiceImpl();
+        likesService = new LikesServiceImpl(dbService.getDataSource());
+        dataService = new DataServiceImpl(dbService.getDataSource());
+        dataService.truncateLikesTable();
     }
 
+    @Before
+    public void clearLikesTable() {
+        dataService.truncateLikesTable();
+
+        for(String player : players) {
+            dataService.createPlayer(player);
+        }
+    }
+
+    @Ignore
     @Test
     public void simpleTest() throws SQLException {
         likesService.like("1");
         assertEquals(likesService.getLikes("1"), 1);
     }
 
+    @Ignore
     @Test
     public void doubleTest() throws SQLException {
         likesService.like("2");
@@ -44,40 +65,25 @@ public class LikesTest {
         assertEquals(likesService.getLikes("2"), 2);
     }
 
+    @Ignore
     @Test
     public void zeroTest() throws SQLException {
-        assertEquals(likesService.getLikes("3"), 0);
+        assertEquals(likesService.getLikes("1"), 0);
     }
 
     @Test
-    @Repeat(10)
+    @Repeating()
     public void concurrentTest() {
         final List<Runnable> tasks = new ArrayList<>();
-        final List<String> playerId = new ArrayList<>();
-        playerId.add("3");
-        playerId.add("4");
-        playerId.add("5");
-        playerId.add("6");
-        playerId.add("7");
-        playerId.add("8");
-        playerId.add("9");
-        playerId.add("10");
-        playerId.add("11");
-        playerId.add("12");
-        playerId.add("13");
-        playerId.add("14");
-        playerId.add("15");
-        playerId.add("16");
 
-
-        Runnable task = () -> { for(String player : playerId) {
+        Runnable task = () -> { for(String player : players) {
             likesService.like(player);
         }};
 
-        ExecutorService executorService = Executors.newFixedThreadPool(playerId.size());
+        ExecutorService executorService = Executors.newFixedThreadPool(players.size());
 
         final ArrayList<Future<?>> likeFutures = new ArrayList<>();
-        for (int i = 0; i < playerId.size(); i++) {
+        for (int i = 0; i < players.size(); i++) {
             final Future<?> likeFuture = executorService.submit(task);
             likeFutures.add(likeFuture);
         }
@@ -90,10 +96,10 @@ public class LikesTest {
             }
         }
 
-        assertEquals(likesService.getLikes("16"), 14);
-        assertEquals(likesService.getLikes("11"), 14);
-        assertEquals(likesService.getLikes("3"), 14);
-        assertEquals(likesService.getLikes("5"), 14);
+        int follow = players.size();
+        for(String player : players) {
+            assertEquals(likesService.getLikes(player), follow);
+        }
     }
 
 

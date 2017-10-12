@@ -14,7 +14,8 @@ import java.util.Properties;
 /**
  * Created by moiseev on 09.10.17.
  */
-public class DBServiceImpl {
+public class DBServiceImpl implements DBService {
+
     private final static BasicDataSource dataSource;
 
     static {
@@ -27,11 +28,9 @@ public class DBServiceImpl {
 
         dataSource = new BasicDataSource();
         dataSource.setDriverClassName(properties.getProperty("db.driver"));
-        dataSource.setUrl(properties.getProperty("db.url")); // jdbc:mysql://127.0.0.1:3306/registrationtest
+        dataSource.setUrl(properties.getProperty("db.url"));
         dataSource.setUsername(properties.getProperty("db.user"));
         dataSource.setPassword(properties.getProperty("db.password"));
-//        dataSource.setMaxActive(100);
-//        dataSource.setMaxWait(10000);
         dataSource.setMaxIdle(10);
 
         Flyway flyway = new Flyway();
@@ -40,8 +39,6 @@ public class DBServiceImpl {
         flyway.setDataSource(dataSource);
         flyway.migrate();
     }
-
-    private DBServiceImpl() {}
 
     private static InputStream getConfig() throws FileNotFoundException {
         InputStream input;
@@ -54,9 +51,7 @@ public class DBServiceImpl {
         return input;
     }
 
-
-
-    public static DataSource getDataSource() {
+    public DataSource getDataSource() {
         return dataSource;
     }
 }
